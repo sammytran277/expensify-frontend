@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 export type Nullable<T> = T | null;
 
 export type Undefinable<T> = T | undefined;
@@ -40,4 +42,9 @@ export type Employee = {
   username: string;
   role: Role;
   expenses: Expense[];
+};
+
+export type UserContextType = {
+  user: Nullable<User>;
+  setUser: Dispatch<SetStateAction<Nullable<User>>>;
 };
