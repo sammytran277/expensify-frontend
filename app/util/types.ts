@@ -4,7 +4,7 @@ export type Nullable<T> = T | null;
 
 export type Undefinable<T> = T | undefined;
 
-export type Role = "ROLE_EMPLOYEE" | "ROLE_REVIEWER";
+export type Role = "EMPLOYEE" | "REVIEWER";
 
 export type User = {
   id: number;
