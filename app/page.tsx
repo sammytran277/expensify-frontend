@@ -10,6 +10,8 @@ import Button from "./components/common/Button";
 import SearchBox from "./components/common/SearchBox";
 import AddExpenseDialog from "./components/AddExpenseDialog";
 import ExpenseTable from "./components/ExpenseTable";
+import ReviewExpenseDialog from "./components/ReviewExpenseDialog";
+import ReviewExpenseTable from "./components/ReviewExpenseTable";
 
 export default function Home() {
   const router = useRouter();
@@ -17,6 +19,8 @@ export default function Home() {
   const [expensesToDisplay, setExpensesToDiplay] = useState<Expense[]>([]);
   const [searchText, setSearchText] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [idOfExpenseToReview, setIdOfExpenseToReview] = useState<number>(0);
+
 
   useEffect(() => {
     if (user === null) {
@@ -76,6 +80,31 @@ export default function Home() {
     );
   };
 
+  const handleReviewExpense = async (
+    event: FormEvent<HTMLFormElement>
+  ): Promise<void> => {
+    event.preventDefault();
+    const target = event.target as HTMLFormElement;
+    api.reviewExpense(
+      idOfExpenseToReview,
+      {
+        state: target.state.value,
+        reviewed_by: target.reviewed_by.value as string,
+        review_date: target.review_date.value as string,
+        comment: target.comment.value as string,
+      },
+      (): void => {
+        setExpensesToDiplay(
+          expensesToDisplay.filter((expense: Expense): boolean => {
+            return expense.id !== idOfExpenseToReview;
+          })
+        );
+        setIsDialogOpen(false);
+      },
+      (error: Error): void => console.error(error)
+    );
+  };
+
   if (user === null) {
     return <p>Redirecting...</p>;
   } else if (user.role === "ROLE_EMPLOYEE") {
@@ -119,5 +148,40 @@ export default function Home() {
       </>
     );
   }
-  return <p>Hello, reviewer!</p>;
+  return (
+    <>
+      <Navbar>
+        <Navbar.Brand>Expenses to Review</Navbar.Brand>
+        <div className="ml-auto">
+          <Button.White onClick={handleLogOut}>Log out</Button.White>
+        </div>
+      </Navbar>
+      <div className="flex flex-col justify-center mx-32 my-10">
+        <div className="ml-auto my-5">
+          <SearchBox
+            onChange={(event: ChangeEvent<HTMLInputElement>): void => {
+              setSearchText(event.target.value);
+            }}
+            placeholder="Search by merchant"
+          />
+        </div>
+        <ReviewExpenseDialog
+          isOpen={isDialogOpen}
+          setIsOpen={setIsDialogOpen}
+          onSubmit={handleReviewExpense}
+        />
+        <ReviewExpenseTable
+          expenses={expensesToDisplay.filter((expense: Expense): boolean => {
+            return expense.merchant
+              .toLowerCase()
+              .startsWith(searchText.toLowerCase());
+          })}
+          onRowButtonClick={(expenseId: number): void => {
+            setIdOfExpenseToReview(expenseId);
+            setIsDialogOpen(true);
+          }}
+        />
+      </div>
+    </>
+  );
 }
